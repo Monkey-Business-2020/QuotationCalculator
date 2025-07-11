@@ -24,10 +24,10 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
 
 csrf = CSRFProtect(app)
 limiter = Limiter(
-    app,
     key_func=get_remote_address,
     default_limits=["50 per minute"]
 )
+limiter.init_app(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
