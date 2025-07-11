@@ -1,0 +1,742 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - iSTORM Quote Calculator{% endblock %}
+
+{% block extra_css %}
+<style>
+    .element-card {
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: white;
+    }
+
+    .element-card:hover {
+        border-color: var(--secondary-color);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .element-card.selected {
+        border-color: var(--success-color);
+        background: linear-gradient(45deg, #d5f4e6, #85e1bc);
+        box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+    }
+
+    .element-card h5 {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .element-card.selected h5 {
+        color: var(--success-color);
+    }
+
+    .questions-panel {
+        display: none;
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid var(--secondary-color);
+    }
+
+    .tooltip-icon {
+        color: var(--secondary-color);
+        cursor: pointer;
+        margin-left: 8px;
+    }
+
+    .result-card {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        margin: 20px 0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .result-card h3 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .breakdown-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 10px 0;
+        border-left: 4px solid var(--secondary-color);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .table th {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 15px;
+        font-weight: 600;
+    }
+
+    .table td {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .badge-category {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin: 2px;
+        display: inline-block;
+    }
+
+    .company-input {
+        font-size: 1.1rem;
+        padding: 15px;
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .company-input:focus {
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+
+    .category-breakdown {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .category-item {
+        background: var(--secondary-color);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+        .element-card {
+            padding: 15px;
+        }
+        
+        .result-card h3 {
+            font-size: 2rem;
+        }
+        
+        .table-responsive {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card fade-in">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <h1 class="display-4 text-primary mb-3">
+                        <i class="fas fa-calculator me-3"></i>Penetration Testing Quote Calculator
+                    </h1>
+                    <p class="lead text-muted">Generate accurate quotes for penetration testing services</p>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-8 mx-auto">
+                        <label for="companyName" class="form-label fs-5 fw-bold">
+                            <i class="fas fa-building me-2"></i>Company Name *
+                        </label>
+                        <input type="text" id="companyName" class="form-control company-input" 
+                               placeholder="Enter client company name" required>
+                        <div class="form-text text-danger" id="companyNameError" style="display: none;">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Company name is required
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="mb-4">
+                    <i class="fas fa-list-check me-2"></i>Select Testing Elements
+                </h3>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="element-card" data-element="webApp">
+                            <h5><i class="fas fa-globe me-2"></i>Web Application Testing</h5>
+                            <p class="text-muted">Comprehensive security assessment of web applications</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="element-card" data-element="externalInfra">
+                            <h5><i class="fas fa-network-wired me-2"></i>External Infrastructure</h5>
+                            <p class="text-muted">Assessment of externally facing network infrastructure</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="element-card" data-element="internalInfra">
+                            <h5><i class="fas fa-server me-2"></i>Internal Infrastructure</h5>
+                            <p class="text-muted">Internal network penetration testing</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="element-card" data-element="api">
+                            <h5><i class="fas fa-plug me-2"></i>API Assessment</h5>
+                            <p class="text-muted">Security testing of REST/GraphQL APIs</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="element-card" data-element="mobileApp">
+                            <h5><i class="fas fa-mobile-alt me-2"></i>Mobile Application</h5>
+                            <p class="text-muted">iOS and Android application security testing</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="element-card" data-element="cloud">
+                            <h5><i class="fas fa-cloud me-2"></i>Cloud Assessment</h5>
+                            <p class="text-muted">Cloud infrastructure security review</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="element-card" data-element="kubernetes">
+                            <h5><i class="fab fa-docker me-2"></i>Kubernetes Security</h5>
+                            <p class="text-muted">Container orchestration security assessment</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="element-card" data-element="docker">
+                            <h5><i class="fab fa-docker me-2"></i>Docker Security Review</h5>
+                            <p class="text-muted">Container and image security analysis</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="element-card" data-element="office365">
+                            <h5><i class="fab fa-microsoft me-2"></i>Office 365 Audit</h5>
+                            <p class="text-muted">Microsoft 365 security configuration review</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions Panels -->
+                <div id="webAppQuestions" class="questions-panel">
+                    <h4><i class="fas fa-globe me-2"></i>Web Application Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of User Roles</label>
+                                <input type="number" class="form-control" id="webAppRoles" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Input Fields Count</label>
+                                <input type="number" class="form-control" id="webAppInputFields" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    Static Pages
+                                    <i class="fas fa-info-circle tooltip-icon" data-bs-toggle="tooltip" 
+                                       title="Static pages have fixed content and don't change based on user actions"></i>
+                                </label>
+                                <input type="number" class="form-control" id="webAppStatic" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    Dynamic Pages
+                                    <i class="fas fa-info-circle tooltip-icon" data-bs-toggle="tooltip" 
+                                       title="Dynamic pages fetch or display content based on user interaction"></i>
+                                </label>
+                                <input type="number" class="form-control" id="webAppDynamic" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">File Upload Functionality</label>
+                                <select class="form-select" id="webAppUpload">
+                                    <option value="no">No</option>
+                                    <option value="yes">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="externalInfraQuestions" class="questions-panel">
+                    <h4><i class="fas fa-network-wired me-2"></i>External Infrastructure Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of IP Addresses</label>
+                                <input type="number" class="form-control" id="externalInfraIPs" min="0" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="internalInfraQuestions" class="questions-panel">
+                    <h4><i class="fas fa-server me-2"></i>Internal Infrastructure Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of IP Addresses</label>
+                                <input type="number" class="form-control" id="internalInfraIPs" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">End-user Devices</label>
+                                <input type="number" class="form-control" id="internalInfraEndUserDevices" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Other Devices</label>
+                                <input type="number" class="form-control" id="internalInfraOtherDevices" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Servers</label>
+                                <input type="number" class="form-control" id="internalInfraServers" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">VLANs</label>
+                                <input type="number" class="form-control" id="internalInfraVLANs" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="internalInfraRemote">
+                                    <label class="form-check-label" for="internalInfraRemote">
+                                        Remote Testing Available
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="apiQuestions" class="questions-panel">
+                    <h4><i class="fas fa-plug me-2"></i>API Assessment Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of API Endpoints</label>
+                                <input type="number" class="form-control" id="apiEndpoints" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of Parameters</label>
+                                <input type="number" class="form-control" id="apiParameters" min="0" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="mobileAppQuestions" class="questions-panel">
+                    <h4><i class="fas fa-mobile-alt me-2"></i>Mobile Application Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Platform</label>
+                                <select class="form-select" id="mobilePlatforms">
+                                    <option value="android">Android</option>
+                                    <option value="ios">iOS</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of User Journeys</label>
+                                <input type="number" class="form-control" id="mobileJourneys" min="0" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cloudQuestions" class="questions-panel">
+                    <h4><i class="fas fa-cloud me-2"></i>Cloud Assessment Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Cloud Provider</label>
+                                <input type="text" class="form-control" id="cloudProvider" placeholder="AWS, Azure, GCP">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of Accounts/Subscriptions</label>
+                                <input type="number" class="form-control" id="cloudAccounts" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Virtual Machines</label>
+                                <input type="number" class="form-control" id="virtualMachines" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Storage Accounts</label>
+                                <input type="number" class="form-control" id="storageAccounts" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Databases</label>
+                                <input type="number" class="form-control" id="virtualDatabses" min="0" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="kubernetesQuestions" class="questions-panel">
+                    <h4><i class="fab fa-docker me-2"></i>Kubernetes Security Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of Unique Pods</label>
+                                <input type="number" class="form-control" id="kubernetesPods" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Networking Plugins</label>
+                                <input type="text" class="form-control" id="kubernetesPlugins" placeholder="Calico, Flannel, etc.">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dockerQuestions" class="questions-panel">
+                    <h4><i class="fab fa-docker me-2"></i>Docker Security Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of Containers/Images</label>
+                                <input type="number" class="form-control" id="dockerContainers" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="dockerCompose">
+                                    <label class="form-check-label" for="dockerCompose">
+                                        Using Docker Compose
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="office365Questions" class="questions-panel">
+                    <h4><i class="fab fa-microsoft me-2"></i>Office 365 Audit Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of Subscriptions</label>
+                                <input type="number" class="form-control" id="office365Subscriptions" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Features Used (Hold Ctrl/Cmd for multiple)</label>
+                                <select class="form-select" id="office365Features" multiple>
+                                    <option value="exchange">Exchange Online</option>
+                                    <option value="sharepoint">SharePoint Online</option>
+                                    <option value="teams">Microsoft Teams</option>
+                                    <option value="onedrive">OneDrive for Business</option>
+                                    <option value="azuread">Azure Active Directory</option>
+                                    <option value="defender">Defender for Office 365</option>
+                                    <option value="purview">Microsoft Purview</option>
+                                    <option value="powerautomate">Power Automate & Power Apps</option>
+                                    <option value="intune">Microsoft Intune</option>
+                                    <option value="yammer">Yammer / Viva Engage</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-success btn-lg" id="calculateBtn">
+                        <i class="fas fa-calculator me-2"></i>Calculate Quote
+                    </button>
+                </div>
+
+                <div id="resultsSection" style="display: none;">
+                    <div class="result-card">
+                        <h3 id="totalDays">0</h3>
+                        <p class="lead">Estimated Testing Days</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-pie me-2"></i>Category Breakdown</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="categoryBreakdown"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3><i class="fas fa-history me-2"></i>Recent Quotes (Last 20)</h3>
+        <button class="btn btn-outline-primary" id="refreshTable">
+            <i class="fas fa-sync-alt me-2"></i>Refresh
+        </button>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover" id="quotesTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Company</th>
+                    <th>Sales Rep</th>
+                    <th>Total Days</th>
+                    <th>Categories</th>
+                    <th>Breakdown</th>
+                </tr>
+            </thead>
+            <tbody id="quotesTableBody">
+                <!-- Data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const selectedElements = [];
+const formData = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadRecentQuotes();
+    initializeTooltips();
+    initializeEventListeners();
+});
+
+function initializeTooltips() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+}
+
+function initializeEventListeners() {
+    document.querySelectorAll('.element-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const element = this.dataset.element;
+            const questionsPanel = document.getElementById(element + 'Questions');
+            
+            if (selectedElements.includes(element)) {
+                selectedElements.splice(selectedElements.indexOf(element), 1);
+                this.classList.remove('selected');
+                if (questionsPanel) {
+                    questionsPanel.style.display = 'none';
+                }
+            } else {
+                selectedElements.push(element);
+                this.classList.add('selected');
+                if (questionsPanel) {
+                    questionsPanel.style.display = 'block';
+                }
+            }
+        });
+    });
+
+    document.getElementById('calculateBtn').addEventListener('click', calculateQuote);
+    document.getElementById('refreshTable').addEventListener('click', loadRecentQuotes);
+}
+
+async function calculateQuote() {
+    const companyName = document.getElementById('companyName').value.trim();
+    const errorDiv = document.getElementById('companyNameError');
+    
+    if (!companyName) {
+        errorDiv.style.display = 'block';
+        document.getElementById('companyName').focus();
+        showToast('Please enter a company name', 'danger');
+        return;
+    } else {
+        errorDiv.style.display = 'none';
+    }
+
+    if (selectedElements.length === 0) {
+        showToast('Please select at least one testing element', 'warning');
+        return;
+    }
+
+    showLoading();
+    collectFormData();
+
+    try {
+        const response = await fetch('/calculate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                companyName: companyName,
+                selectedElements: selectedElements,
+                formData: formData
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            displayResults(data);
+            loadRecentQuotes();
+            showToast('Quote calculated successfully!', 'success');
+        } else {
+            showToast(data.error || 'An error occurred', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Network error occurred', 'danger');
+    } finally {
+        hideLoading();
+    }
+}
+
+function collectFormData() {
+    const inputs = document.querySelectorAll('.questions-panel input, .questions-panel select');
+    inputs.forEach(input => {
+        if (input.type === 'checkbox') {
+            formData[input.id] = input.checked ? 'true' : 'false';
+        } else if (input.multiple) {
+            formData[input.id] = Array.from(input.selectedOptions).map(option => option.value);
+        } else {
+            formData[input.id] = input.value;
+        }
+    });
+}
+
+function displayResults(data) {
+    document.getElementById('totalDays').textContent = data.estimatedDays;
+    
+    const breakdownDiv = document.getElementById('categoryBreakdown');
+    let breakdownHtml = '';
+    
+    if (data.categoryBreakdown && Object.keys(data.categoryBreakdown).length > 0) {
+        for (const [category, days] of Object.entries(data.categoryBreakdown)) {
+            breakdownHtml += `
+                <div class="breakdown-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">${category}</h6>
+                        <span class="badge bg-primary">${days} days</span>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        breakdownHtml = '<p class="text-muted">No breakdown available</p>';
+    }
+    
+    breakdownDiv.innerHTML = breakdownHtml;
+    document.getElementById('resultsSection').style.display = 'block';
+    
+    document.getElementById('resultsSection').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
+}
+
+async function loadRecentQuotes() {
+    try {
+        const response = await fetch('/quotes/recent');
+        const quotes = await response.json();
+        
+        const tbody = document.getElementById('quotesTableBody');
+        tbody.innerHTML = '';
+        
+        quotes.forEach(quote => {
+            const row = document.createElement('tr');
+            
+            const categoriesHtml = quote.selectedElements.map(element => {
+                const displayNames = {
+                    'webApp': 'Web App',
+                    'externalInfra': 'Ext Inf',
+                    'internalInfra': 'Int Inf',
+                    'api': 'API',
+                    'mobileApp': 'Mobile App',
+                    'cloud': 'Cloud',
+                    'kubernetes': 'Kubernetes',
+                    'docker': 'Docker',
+                    'office365': 'Office365'
+                };
+                return `<span class="badge-category bg-secondary">${displayNames[element] || element}</span>`;
+            }).join(' ');
+            
+            const breakdownHtml = Object.entries(quote.categoryBreakdown || {}).map(([category, days]) => {
+                return `<span class="category-item">${category}: ${days}d</span>`;
+            }).join(' ');
+            
+            row.innerHTML = `
+                <td>${quote.timestamp}</td>
+                <td class="fw-bold">${quote.companyName}</td>
+                <td>${quote.userFullName}</td>
+                <td><span class="badge bg-success fs-6">${quote.estimatedDays} days</span></td>
+                <td>${categoriesHtml}</td>
+                <td>
+                    <div class="category-breakdown">
+                        ${breakdownHtml}
+                    </div>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+        
+        if (quotes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No quotes found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error loading quotes:', error);
+        showToast('Error loading recent quotes', 'danger');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Register - iSTORM Quote Calculator{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card fade-in">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+                    <h2 class="card-title">Create Account</h2>
+                    <p class="text-muted">Join the iSTORM team</p>
+                </div>
+                
+                <form method="POST" id="registerForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">
+                            <i class="fas fa-id-card me-2"></i>Full Name
+                        </label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" required maxlength="100" minlength="2">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user me-2"></i>Username
+                        </label>
+                        <input type="text" class="form-control" id="username" name="username" required maxlength="30" minlength="3" pattern="[a-zA-Z0-9_]+">
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            3-30 characters, letters, numbers, and underscores only
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope me-2"></i>Email Address
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Must be an @istormsolutions.co.uk email address
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock me-2"></i>Password
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" required minlength="12">
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Minimum 12 characters with uppercase, lowercase, number, and special character
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">
+                            <i class="fas fa-lock me-2"></i>Confirm Password
+                        </label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="12">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100 mb-3">
+                        <i class="fas fa-user-plus me-2"></i>Create Account
+                    </button>
+                </form>
+                
+                <div class="text-center">
+                    <p class="text-muted">Already have an account?</p>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (!email.endsWith('@istormsolutions.co.uk')) {
+        e.preventDefault();
+        showToast('Email must be from @istormsolutions.co.uk domain', 'danger');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        e.preventDefault();
+        showToast('Passwords do not match', 'danger');
+        return;
+    }
+    
+    if (password.length < 12) {
+        e.preventDefault();
+        showToast('Password must be at least 12 characters long', 'danger');
+        return;
+    }
+    
+    if (!/(?=.*[a-z])/.test(password)) {
+        e.preventDefault();
+        showToast('Password must contain at least one lowercase letter', 'danger');
+        return;
+    }
+    
+    if (!/(?=.*[A-Z])/.test(password)) {
+        e.preventDefault();
+        showToast('Password must contain at least one uppercase letter', 'danger');
+        return;
+    }
+    
+    if (!/(?=.*\d)/.test(password)) {
+        e.preventDefault();
+        showToast('Password must contain at least one number', 'danger');
+        return;
+    }
+    
+    if (!/(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password)) {
+        e.preventDefault();
+        showToast('Password must contain at least one special character', 'danger');
+        return;
+    }
+    
+    showLoading();
+});
+</script>
+{% endblock %}
