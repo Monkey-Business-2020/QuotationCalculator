@@ -85,9 +85,14 @@ sudo ufw allow 'Nginx Full'
 sudo ufw allow ssh
 sudo ufw --force enable
 
-# Set up SSL certificate
-echo "🔐 Setting up SSL certificate..."
-sudo certbot --nginx -d calc.istormsolutions.online --non-interactive --agree-tos --email admin@istormsolutions.co.uk
+# CloudFlare SSL setup instructions
+echo "🔐 CloudFlare SSL setup required..."
+echo "⚠️  Please follow the CloudFlare SSL setup guide in cloudflare-ssl-setup.md"
+echo "⚠️  You need to:"
+echo "   1. Generate CloudFlare Origin Certificate"
+echo "   2. Save certificate files to /etc/ssl/certs/ and /etc/ssl/private/"
+echo "   3. Set CloudFlare SSL mode to 'Full (strict)'"
+echo "   4. Configure DNS with CloudFlare proxy enabled"
 
 # Final status check
 echo "🏁 Checking service status..."
