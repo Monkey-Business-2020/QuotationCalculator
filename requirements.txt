@@ -1,11 +1,28 @@
+# Flask and Extensions
 Flask==3.0.0
 Flask-Login==0.6.3
 Flask-SQLAlchemy==3.1.1
-Werkzeug==3.0.1
-python-dotenv==1.0.0
-gunicorn==21.2.0
 Flask-Limiter==3.5.0
 Flask-WTF==1.2.1
-email-validator==2.1.0
-bleach==6.1.0
+Werkzeug==3.0.1
+
+# Database
+psycopg2-binary==2.9.9
+SQLAlchemy==2.0.23
+
+# Redis (for rate limiting)
+redis==5.0.1
+
+# Security
 bcrypt==4.1.2
+bleach==6.1.0
+
+# Email
+email-validator==2.1.0
+
+# Environment & Utilities
+python-dotenv==1.0.0
+requests==2.31.0
+
+# Production Server
+gunicorn==21.2.0

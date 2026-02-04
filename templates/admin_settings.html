@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Site Settings - {{ site_settings.company_name }}{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card fade-in">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="card-title mb-0">
+                        <i class="fas fa-palette me-2"></i>Site Settings & Branding
+                    </h2>
+                    <a href="{{ url_for('admin_panel') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Admin
+                    </a>
+                </div>
+
+                <div class="row">
+                    <!-- Branding Settings -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-building me-2"></i>Company Branding</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Company Name -->
+                                <div class="mb-4">
+                                    <label for="companyName" class="form-label fw-bold">
+                                        <i class="fas fa-tag me-2"></i>Company Name
+                                    </label>
+                                    <input type="text" class="form-control" id="companyName"
+                                           value="{{ site_settings.company_name }}"
+                                           maxlength="100" placeholder="Enter company name">
+                                    <div class="form-text">This name appears in the navbar and page titles.</div>
+                                </div>
+
+                                <!-- Logo Upload -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-image me-2"></i>Company Logo
+                                    </label>
+                                    {% if site_settings.company_logo %}
+                                    <div class="mb-3 p-3 bg-light rounded text-center">
+                                        <img src="{{ url_for('static', filename='uploads/logos/' + site_settings.company_logo) }}"
+                                             alt="Current Logo" style="max-height: 80px; max-width: 200px;" class="mb-2">
+                                        <br>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="removeLogo()">
+                                            <i class="fas fa-trash me-1"></i>Remove Logo
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                    <form action="{{ url_for('upload_logo') }}" method="POST" enctype="multipart/form-data">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="input-group">
+                                            <input type="file" class="form-control" name="logo" accept="image/*">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-upload me-1"></i>Upload
+                                            </button>
+                                        </div>
+                                        <div class="form-text">Recommended: PNG or SVG, max 200x80px</div>
+                                    </form>
+                                </div>
+
+                                <button type="button" class="btn btn-success w-100" onclick="saveBranding()">
+                                    <i class="fas fa-save me-2"></i>Save Branding Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Color Scheme -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-swatchbook me-2"></i>Color Scheme</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">Select a color scheme to customize the application appearance.</p>
+
+                                <div class="row" id="colorSchemes">
+                                    {% for key, scheme in color_schemes.items() %}
+                                    <div class="col-6 mb-3">
+                                        <div class="color-scheme-option p-3 rounded border {{ 'border-primary border-3' if site_settings.color_scheme == key else '' }}"
+                                             data-scheme="{{ key }}" onclick="selectColorScheme('{{ key }}')" style="cursor: pointer;">
+                                            <div class="d-flex mb-2">
+                                                <div style="width: 24px; height: 24px; background: {{ scheme.primary }}; border-radius: 4px; margin-right: 4px;"></div>
+                                                <div style="width: 24px; height: 24px; background: {{ scheme.secondary }}; border-radius: 4px; margin-right: 4px;"></div>
+                                                <div style="width: 24px; height: 24px; background: {{ scheme.navbar }}; border-radius: 4px;"></div>
+                                            </div>
+                                            <small class="fw-bold">{{ scheme.name }}</small>
+                                            {% if site_settings.color_scheme == key %}
+                                            <i class="fas fa-check-circle text-success ms-2"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="alert alert-info mt-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Color changes will take effect on next page load.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Domain Restriction -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-envelope me-2"></i>Registration Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row align-items-end">
+                                    <div class="col-md-8">
+                                        <label for="allowedEmailDomain" class="form-label fw-bold">
+                                            Email Domain Restriction
+                                        </label>
+                                        <input type="text" class="form-control" id="allowedEmailDomain"
+                                               value="{{ site_settings.allowed_email_domain }}"
+                                               placeholder="@yourcompany.com (leave empty for any domain)">
+                                        <div class="form-text">
+                                            Restrict user registration to a specific email domain.
+                                            Leave empty to allow any email address.
+                                            <br><strong>Note:</strong> Environment variable ALLOWED_EMAIL_DOMAIN takes precedence if set.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-success w-100" onclick="saveEmailSettings()">
+                                            <i class="fas fa-save me-2"></i>Save Email Settings
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .color-scheme-option {
+        transition: all 0.3s ease;
+    }
+    .color-scheme-option:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .color-scheme-option.selected {
+        border-color: var(--primary-color) !important;
+        border-width: 3px !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedColorScheme = '{{ site_settings.color_scheme }}';
+
+    function selectColorScheme(scheme) {
+        selectedColorScheme = scheme;
+
+        // Update UI
+        document.querySelectorAll('.color-scheme-option').forEach(el => {
+            el.classList.remove('border-primary', 'border-3');
+            const checkIcon = el.querySelector('.fa-check-circle');
+            if (checkIcon) checkIcon.remove();
+        });
+
+        const selected = document.querySelector(`[data-scheme="${scheme}"]`);
+        selected.classList.add('border-primary', 'border-3');
+
+        const smallEl = selected.querySelector('small');
+        if (!selected.querySelector('.fa-check-circle')) {
+            smallEl.insertAdjacentHTML('afterend', '<i class="fas fa-check-circle text-success ms-2"></i>');
+        }
+
+        // Auto-save color scheme
+        saveColorScheme(scheme);
+    }
+
+    function saveColorScheme(scheme) {
+        fetch('/admin/settings/branding', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                color_scheme: scheme
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Color scheme updated! Refresh to see changes.', 'success');
+            } else {
+                showToast(data.error || 'Failed to update color scheme', 'danger');
+            }
+        })
+        .catch(error => {
+            showToast('Error saving color scheme', 'danger');
+        });
+    }
+
+    function saveBranding() {
+        const companyName = document.getElementById('companyName').value.trim();
+
+        if (!companyName) {
+            showToast('Company name is required', 'danger');
+            return;
+        }
+
+        fetch('/admin/settings/branding', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                company_name: companyName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Branding settings saved! Refresh to see changes.', 'success');
+            } else {
+                showToast(data.error || 'Failed to save settings', 'danger');
+            }
+        })
+        .catch(error => {
+            showToast('Error saving settings', 'danger');
+        });
+    }
+
+    function saveEmailSettings() {
+        const domain = document.getElementById('allowedEmailDomain').value.trim();
+
+        fetch('/admin/settings/branding', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                allowed_email_domain: domain
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Email settings saved successfully!', 'success');
+            } else {
+                showToast(data.error || 'Failed to save settings', 'danger');
+            }
+        })
+        .catch(error => {
+            showToast('Error saving settings', 'danger');
+        });
+    }
+
+    function removeLogo() {
+        if (!confirm('Are you sure you want to remove the company logo?')) return;
+
+        fetch('/admin/settings/logo/remove', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Logo removed successfully!', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(data.error || 'Failed to remove logo', 'danger');
+            }
+        })
+        .catch(error => {
+            showToast('Error removing logo', 'danger');
+        });
+    }
+</script>
+{% endblock %}

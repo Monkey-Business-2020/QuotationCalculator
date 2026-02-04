@@ -4,11 +4,97 @@
 
 {% block extra_css %}
 <style>
+    .motivational-quote {
+        text-align: center;
+        margin: 20px auto;
+        padding: 15px;
+        max-width: 800px;
+        font-style: italic;
+    }
+    
+    .quote-text {
+        font-size: 1.1rem;
+        background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: shimmer 3s ease-in-out infinite;
+        font-weight: 500;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .quote-author {
+        color: #212529;
+        font-size: 0.95rem;
+        margin-top: 10px;
+        font-style: normal;
+    }
+    
+    .red-team-card {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+        border: 2px solid #ff6b6b !important;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .red-team-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 107, 107, 0.1), transparent);
+        animation: redTeamShine 3s infinite;
+        z-index: 1;
+    }
+    
+    .red-team-card * {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .red-team-card:hover {
+        border-color: #dc3545 !important;
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+        transform: translateY(-3px);
+        background: linear-gradient(135deg, #fff0f0 0%, #ffdddd 100%);
+    }
+    
+    .red-team-card.selected {
+        border-color: #dc3545 !important;
+        background: linear-gradient(135deg, #ffe6e6 0%, #ffcccc 100%);
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+    }
+    
+    .red-team-card h5 {
+        color: #dc3545 !important;
+        font-weight: 700;
+    }
+    
+    .red-team-card p {
+        color: #6c2c2c !important;
+        font-weight: 500;
+    }
+    
+    @keyframes redTeamShine {
+        0% { left: -100%; }
+        50% { left: 100%; }
+        100% { left: 100%; }
+    }
+    
     .element-card {
         border: 2px solid #e9ecef;
         border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
+        padding: 15px;
+        margin-bottom: 15px;
         transition: all 0.3s ease;
         cursor: pointer;
         background: white;
@@ -38,8 +124,8 @@
 
     .questions-panel {
         display: none;
-        margin-top: 20px;
-        padding: 20px;
+        margin-top: 15px;
+        padding: 15px;
         background: #f8f9fa;
         border-radius: 10px;
         border-left: 4px solid var(--secondary-color);
@@ -50,14 +136,22 @@
         cursor: pointer;
         margin-left: 8px;
     }
+    
+    .quote-profile-pic {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #dee2e6;
+    }
 
     .result-card {
         background: linear-gradient(45deg, #667eea, #764ba2);
         color: white;
         border-radius: 15px;
-        padding: 30px;
+        padding: 20px;
         text-align: center;
-        margin: 20px 0;
+        margin: 15px 0;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
 
@@ -79,8 +173,8 @@
     .table-container {
         background: white;
         border-radius: 15px;
-        padding: 20px;
-        margin-top: 30px;
+        padding: 15px;
+        margin-top: 20px;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
 
@@ -139,6 +233,86 @@
         font-weight: 500;
     }
 
+    /* Expandable row styles */
+    .expandable-row {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .expandable-row:hover {
+        background-color: #f0f4f8 !important;
+    }
+
+    .expand-icon {
+        display: inline-block;
+        width: 20px;
+        transition: transform 0.3s ease;
+        margin-right: 10px;
+    }
+
+    .expand-icon.rotated {
+        transform: rotate(90deg);
+    }
+
+    .detail-row {
+        display: none;
+        background-color: #f8f9fa;
+    }
+
+    .detail-row td {
+        padding: 0 !important;
+        border: none !important;
+    }
+
+    .detail-content {
+        padding: 20px 40px;
+        background: linear-gradient(to right, #f7fafc 0%, #ffffff 100%);
+        border-left: 4px solid var(--secondary-color);
+        margin: 10px 20px;
+        border-radius: 8px;
+    }
+
+    .detail-category {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .detail-category h6 {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+    .detail-category h6 i {
+        margin-right: 8px;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 500;
+        color: #4a5568;
+    }
+
+    .detail-value {
+        color: #2d3748;
+        font-weight: 600;
+    }
+
     @media (max-width: 768px) {
         .element-card {
             padding: 15px;
@@ -151,6 +325,10 @@
         .table-responsive {
             font-size: 0.9rem;
         }
+
+        .detail-content {
+            padding: 15px 20px;
+        }
     }
 </style>
 {% endblock %}
@@ -160,14 +338,21 @@
     <div class="col-12">
         <div class="card fade-in">
             <div class="card-body">
-                <div class="text-center mb-4">
-                    <h1 class="display-4 text-primary mb-3">
+                <div class="text-center mb-3">
+                    <h1 class="display-5 text-primary mb-2">
                         <i class="fas fa-calculator me-3"></i>Penetration Testing Quote Calculator
                     </h1>
                     <p class="lead text-muted">Generate accurate quotes for penetration testing services</p>
                 </div>
 
-                <div class="row mb-4">
+                {% if motivational_quote %}
+                <div class="motivational-quote">
+                    <div class="quote-text">"{{ motivational_quote }}"</div>
+                    <div class="quote-author">— {{ quote_author }}</div>
+                </div>
+                {% endif %}
+
+                <div class="row mb-3">
                     <div class="col-md-8 mx-auto">
                         <label for="companyName" class="form-label fs-5 fw-bold">
                             <i class="fas fa-building me-2"></i>Company Name *
@@ -180,7 +365,7 @@
                     </div>
                 </div>
 
-                <h3 class="mb-4">
+                <h3 class="mb-3">
                     <i class="fas fa-list-check me-2"></i>Select Testing Elements
                 </h3>
 
@@ -237,6 +422,22 @@
                         <div class="element-card" data-element="office365">
                             <h5><i class="fab fa-microsoft me-2"></i>Office 365 Audit</h5>
                             <p class="text-muted">Microsoft 365 security configuration review</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="element-card" data-element="wifiAssessment">
+                            <h5><i class="fas fa-wifi me-2"></i>Wi-Fi Assessment</h5>
+                            <p class="text-muted">Wireless network security evaluation</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Red Teaming Assessment - Special positioned element -->
+                <div class="row justify-content-center mt-4">
+                    <div class="col-md-6 col-lg-5">
+                        <div class="element-card red-team-card" data-element="redTeaming">
+                            <h5><i class="fas fa-skull me-2"></i><i class="fas fa-laptop-code me-2"></i>Red Teaming Assessment</h5>
+                            <p class="text-muted">Advanced persistent threat simulation</p>
                         </div>
                     </div>
                 </div>
@@ -492,6 +693,93 @@
                     </div>
                 </div>
 
+                <div id="wifiAssessmentQuestions" class="questions-panel">
+                    <h4><i class="fas fa-wifi me-2"></i>Wi-Fi Assessment Details</h4>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">What frequencies are being used?</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="2.4ghz" id="wifi24ghz">
+                                    <label class="form-check-label" for="wifi24ghz">
+                                        2.4 GHz
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="5ghz" id="wifi5ghz">
+                                    <label class="form-check-label" for="wifi5ghz">
+                                        5 GHz
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="6ghz" id="wifi6ghz">
+                                    <label class="form-check-label" for="wifi6ghz">
+                                        6 GHz (Wi-Fi 6E)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    How many SSIDs are there?
+                                    <i class="fas fa-info-circle tooltip-icon" data-bs-toggle="tooltip" 
+                                       title="SSID stands for Service Set Identifier - it's the name of your Wi-Fi network that appears when you scan for available networks. Most organizations have multiple SSIDs for different purposes (guest, staff, IoT devices, etc.)"></i>
+                                </label>
+                                <input type="number" class="form-control" id="wifiSsidCount" min="1" value="1">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">How do users authenticate to the Wi-Fi?</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="wpa2-psk" id="wifiWpa2Psk">
+                                    <label class="form-check-label" for="wifiWpa2Psk">
+                                        WPA2/3-PSK (Pre-shared key/Password)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="wpa2-enterprise" id="wifiWpa2Enterprise">
+                                    <label class="form-check-label" for="wifiWpa2Enterprise">
+                                        WPA2/3-Enterprise (Certificate/RADIUS)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="open" id="wifiOpen">
+                                    <label class="form-check-label" for="wifiOpen">
+                                        Open Network (No authentication)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="captive-portal" id="wifiCaptivePortal">
+                                    <label class="form-check-label" for="wifiCaptivePortal">
+                                        Captive Portal (Web-based authentication)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="redTeamingQuestions" class="questions-panel">
+                    <h4><i class="fas fa-skull me-2"></i><i class="fas fa-laptop-code me-2"></i>Red Teaming Assessment Details</h4>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                                <div class="me-3" style="font-size: 2rem;">
+                                    💀💻
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading mb-2">Elite Assessment Detected!</h5>
+                                    <p class="mb-0">
+                                        Oh, the client wants to get pwned hard, let's jump on a call with them!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="text-center mt-4">
                     <button type="button" class="btn btn-success btn-lg" id="calculateBtn">
                         <i class="fas fa-calculator me-2"></i>Calculate Quote
@@ -520,7 +808,7 @@
 
 <div class="table-container">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3><i class="fas fa-history me-2"></i>Recent Quotes (Last 20)</h3>
+        <h3><i class="fas fa-history me-2"></i>Team Quotes (All Sales Reps)</h3>
         <button class="btn btn-outline-primary" id="refreshTable">
             <i class="fas fa-sync-alt me-2"></i>Refresh
         </button>
@@ -643,9 +931,29 @@ async function calculateQuote() {
 
 function collectFormData() {
     const inputs = document.querySelectorAll('.questions-panel input, .questions-panel select');
+    
+    // Initialize arrays for checkbox groups
+    formData['wifiFrequencies'] = [];
+    formData['wifiAuthentication'] = [];
+    
     inputs.forEach(input => {
         if (input.type === 'checkbox') {
-            formData[input.id] = input.checked ? 'true' : 'false';
+            // Handle Wi-Fi frequency checkboxes
+            if (input.id.startsWith('wifi') && (input.id.includes('24ghz') || input.id.includes('5ghz') || input.id.includes('6ghz'))) {
+                if (input.checked) {
+                    formData['wifiFrequencies'].push(input.value);
+                }
+            }
+            // Handle Wi-Fi authentication checkboxes
+            else if (input.id.startsWith('wifi') && (input.id.includes('Psk') || input.id.includes('Enterprise') || input.id.includes('Open') || input.id.includes('Portal'))) {
+                if (input.checked) {
+                    formData['wifiAuthentication'].push(input.value);
+                }
+            }
+            // Handle other checkboxes
+            else {
+                formData[input.id] = input.checked ? 'true' : 'false';
+            }
         } else if (input.multiple) {
             formData[input.id] = Array.from(input.selectedOptions).map(option => option.value);
         } else {
@@ -692,8 +1000,11 @@ async function loadRecentQuotes() {
         const tbody = document.getElementById('quotesTableBody');
         tbody.innerHTML = '';
         
-        quotes.forEach(quote => {
+        quotes.forEach((quote, index) => {
+            // Create main row
             const row = document.createElement('tr');
+            row.classList.add('expandable-row');
+            row.dataset.rowIndex = index;
             
             const categoriesHtml = quote.selectedElements.map(element => {
                 const displayNames = {
@@ -715,9 +1026,22 @@ async function loadRecentQuotes() {
             }).join(' ');
             
             row.innerHTML = `
-                <td>${quote.timestamp}</td>
+                <td>
+                    <span class="expand-icon">
+                        <i class="fas fa-chevron-right"></i>
+                    </span>
+                    ${quote.timestamp}
+                </td>
                 <td class="fw-bold">${quote.companyName}</td>
-                <td>${quote.userFullName}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        ${quote.userProfilePicture ? 
+                            `<img src="/static/uploads/profiles/${quote.userProfilePicture}" alt="Profile" class="quote-profile-pic me-2">` :
+                            `<i class="fas fa-user-circle me-2 text-muted"></i>`
+                        }
+                        <span>${quote.userFullName}</span>
+                    </div>
+                </td>
                 <td><span class="badge bg-success fs-6">${quote.estimatedDays} days</span></td>
                 <td>${categoriesHtml}</td>
                 <td>
@@ -727,7 +1051,26 @@ async function loadRecentQuotes() {
                 </td>
             `;
             
+            // Add click handler
+            row.addEventListener('click', function() {
+                toggleDetailRow(this, quote);
+            });
+            
             tbody.appendChild(row);
+            
+            // Create detail row
+            const detailRow = document.createElement('tr');
+            detailRow.classList.add('detail-row');
+            detailRow.dataset.detailIndex = index;
+            detailRow.innerHTML = `
+                <td colspan="6">
+                    <div class="detail-content">
+                        ${formatDetailContent(quote)}
+                    </div>
+                </td>
+            `;
+            
+            tbody.appendChild(detailRow);
         });
         
         if (quotes.length === 0) {
@@ -737,6 +1080,191 @@ async function loadRecentQuotes() {
         console.error('Error loading quotes:', error);
         showToast('Error loading recent quotes', 'danger');
     }
+}
+
+function toggleDetailRow(row, quote) {
+    const index = row.dataset.rowIndex;
+    const detailRow = document.querySelector(`tr[data-detail-index="${index}"]`);
+    const expandIcon = row.querySelector('.expand-icon i');
+    
+    if (detailRow.style.display === 'table-row') {
+        detailRow.style.display = 'none';
+        expandIcon.classList.remove('fa-chevron-down');
+        expandIcon.classList.add('fa-chevron-right');
+        row.querySelector('.expand-icon').classList.remove('rotated');
+    } else {
+        detailRow.style.display = 'table-row';
+        expandIcon.classList.remove('fa-chevron-right');
+        expandIcon.classList.add('fa-chevron-down');
+        row.querySelector('.expand-icon').classList.add('rotated');
+    }
+}
+
+function formatDetailContent(quote) {
+    const formData = quote.formData || {};
+    let content = '<div class="row">';
+    
+    // Define category configurations
+    const categoryConfigs = {
+        webApp: {
+            title: '<i class="fas fa-globe"></i> Web Application Details',
+            fields: {
+                webAppRoles: 'Number of User Roles',
+                webAppInputFields: 'Input Fields Count',
+                webAppStatic: 'Static Pages',
+                webAppDynamic: 'Dynamic Pages',
+                webAppUpload: 'File Upload Functionality'
+            }
+        },
+        externalInfra: {
+            title: '<i class="fas fa-network-wired"></i> External Infrastructure Details',
+            fields: {
+                externalInfraIPs: 'Number of IP Addresses'
+            }
+        },
+        internalInfra: {
+            title: '<i class="fas fa-server"></i> Internal Infrastructure Details',
+            fields: {
+                internalInfraIPs: 'Number of IP Addresses',
+                internalInfraEndUserDevices: 'End-user Devices',
+                internalInfraOtherDevices: 'Other Devices',
+                internalInfraServers: 'Servers',
+                internalInfraVLANs: 'VLANs',
+                internalInfraRemote: 'Remote Testing Available'
+            }
+        },
+        api: {
+            title: '<i class="fas fa-plug"></i> API Assessment Details',
+            fields: {
+                apiEndpoints: 'Number of API Endpoints',
+                apiParameters: 'Number of Parameters'
+            }
+        },
+        mobileApp: {
+            title: '<i class="fas fa-mobile-alt"></i> Mobile Application Details',
+            fields: {
+                mobilePlatforms: 'Platform',
+                mobileJourneys: 'Number of User Journeys'
+            }
+        },
+        cloud: {
+            title: '<i class="fas fa-cloud"></i> Cloud Assessment Details',
+            fields: {
+                cloudProvider: 'Cloud Provider',
+                cloudAccounts: 'Number of Accounts/Subscriptions',
+                virtualMachines: 'Virtual Machines',
+                storageAccounts: 'Storage Accounts',
+                virtualDatabses: 'Databases'
+            }
+        },
+        kubernetes: {
+            title: '<i class="fab fa-docker"></i> Kubernetes Security Details',
+            fields: {
+                kubernetesPods: 'Number of Unique Pods',
+                kubernetesPlugins: 'Networking Plugins'
+            }
+        },
+        docker: {
+            title: '<i class="fab fa-docker"></i> Docker Security Details',
+            fields: {
+                dockerContainers: 'Number of Containers/Images',
+                dockerCompose: 'Using Docker Compose'
+            }
+        },
+        office365: {
+            title: '<i class="fab fa-microsoft"></i> Office 365 Audit Details',
+            fields: {
+                office365Subscriptions: 'Number of Subscriptions',
+                office365Features: 'Features Used'
+            }
+        },
+        wifiAssessment: {
+            title: '<i class="fas fa-wifi"></i> Wi-Fi Assessment Details',
+            fields: {
+                wifiFrequencies: 'Frequencies Used',
+                wifiSsidCount: 'Number of SSIDs',
+                wifiAuthentication: 'Authentication Methods'
+            }
+        },
+        redTeaming: {
+            title: '<i class="fas fa-skull"></i><i class="fas fa-laptop-code"></i> Red Teaming Assessment Details',
+            fields: {
+                redTeamMessage: 'Assessment Type'
+            }
+        }
+    };
+    
+    // Generate content for each selected element
+    quote.selectedElements.forEach(element => {
+        if (categoryConfigs[element]) {
+            const config = categoryConfigs[element];
+            content += '<div class="col-md-6"><div class="detail-category">';
+            content += `<h6>${config.title}</h6>`;
+            
+            let hasData = false;
+            Object.entries(config.fields).forEach(([fieldKey, fieldLabel]) => {
+                const value = formData[fieldKey];
+                if (value !== undefined && value !== null && value !== '' && value !== '0' && value !== 0) {
+                    hasData = true;
+                    let displayValue = value;
+                    
+                    // Special formatting for certain fields
+                    if (fieldKey === 'webAppUpload') {
+                        displayValue = value === 'yes' ? 'Yes' : 'No';
+                    } else if (fieldKey === 'internalInfraRemote' || fieldKey === 'dockerCompose') {
+                        displayValue = value === 'true' ? 'Yes' : 'No';
+                    } else if (fieldKey === 'mobilePlatforms') {
+                        displayValue = value.charAt(0).toUpperCase() + value.slice(1);
+                    } else if (fieldKey === 'office365Features' && Array.isArray(value)) {
+                        const featureNames = {
+                            'exchange': 'Exchange Online',
+                            'sharepoint': 'SharePoint Online',
+                            'teams': 'Microsoft Teams',
+                            'onedrive': 'OneDrive for Business',
+                            'azuread': 'Azure Active Directory',
+                            'defender': 'Defender for Office 365',
+                            'purview': 'Microsoft Purview',
+                            'powerautomate': 'Power Automate & Power Apps',
+                            'intune': 'Microsoft Intune',
+                            'yammer': 'Yammer / Viva Engage'
+                        };
+                        displayValue = value.map(f => featureNames[f] || f).join(', ');
+                    } else if (fieldKey === 'wifiFrequencies' && Array.isArray(value)) {
+                        const frequencyNames = {
+                            '2.4ghz': '2.4 GHz',
+                            '5ghz': '5 GHz',
+                            '6ghz': '6 GHz (Wi-Fi 6E)'
+                        };
+                        displayValue = value.map(f => frequencyNames[f] || f).join(', ');
+                    } else if (fieldKey === 'wifiAuthentication' && Array.isArray(value)) {
+                        const authNames = {
+                            'wpa2-psk': 'WPA2/3-PSK',
+                            'wpa2-enterprise': 'WPA2/3-Enterprise',
+                            'open': 'Open Network',
+                            'captive-portal': 'Captive Portal'
+                        };
+                        displayValue = value.map(a => authNames[a] || a).join(', ');
+                    }
+                    
+                    content += `
+                        <div class="detail-item">
+                            <span class="detail-label">${fieldLabel}:</span>
+                            <span class="detail-value">${displayValue}</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (!hasData) {
+                content += '<p class="text-muted mb-0">No specific data entered</p>';
+            }
+            
+            content += '</div></div>';
+        }
+    });
+    
+    content += '</div>';
+    return content;
 }
 </script>
 {% endblock %}

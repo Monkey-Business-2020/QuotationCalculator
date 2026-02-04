@@ -1,0 +1,83 @@
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Database files (will be in Docker volumes)
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SSL certificates (mount separately)
+*.pem
+*.crt
+*.key
+*.p12
+*.pfx
+nginx/ssl/*
+
+# Documentation
+*.md
+!requirements.txt
+
+# Testing
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+
+# Build artifacts
+build/
+dist/
+
+# Sensitive files
+secrets/
+keys/
+credentials/
+*.secret
+*.private
+cookies*.txt
+
+# Uploads (will be in Docker volumes)
+static/uploads/
+
+# Development scripts
+start.sh
+deploy.sh
+verify_security.sh
+create_deployment_package.sh

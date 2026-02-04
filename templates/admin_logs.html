@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs - iSTORM Quote Calculator{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Audit Logs</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Complete audit trail of all user actions for security monitoring and compliance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Logs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity (Last 100 Actions)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                        <table class="table table-sm table-striped">
+                            <thead class="sticky-top bg-light">
+                                <tr>
+                                    <th style="width: 140px;">Timestamp</th>
+                                    <th style="width: 120px;">User</th>
+                                    <th style="width: 180px;">Action</th>
+                                    <th>Details</th>
+                                    <th style="width: 120px;">IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_logs %}
+                                <tr>
+                                    <td><small><strong>{{ log.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}</strong></small></td>
+                                    <td>
+                                        <strong>{{ log.username or 'Anonymous' }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if log.action == 'LOGIN' %}bg-success
+                                            {% elif log.action == 'LOGOUT' %}bg-secondary
+                                            {% elif log.action.startswith('ADMIN') or log.action in ['USER_STATUS_CHANGED', 'PERMISSION_CHANGED'] %}bg-danger
+                                            {% elif log.action == 'QUOTE_CREATED' %}bg-primary
+                                            {% elif log.action in ['PASSWORD_CHANGED', 'EMAIL_UPDATED', 'PROFILE_PICTURE_UPDATED', 'PASSWORD_RESET'] %}bg-info
+                                            {% elif log.action in ['USER_MANAGEMENT_ACCESS', 'ANALYTICS_ACCESS', 'LOGS_ACCESS'] %}bg-warning text-dark
+                                            {% else %}bg-dark
+                                            {% endif %}">
+                                            {{ log.action.replace('_', ' ').title() }}
+                                        </span>
+                                    </td>
+                                    <td><small>{{ log.details or '-' }}</small></td>
+                                    <td><small><code>{{ log.ip_address }}</code></small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if recent_logs|length == 0 %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>No audit logs found.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

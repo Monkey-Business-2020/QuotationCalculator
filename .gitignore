@@ -1,36 +1,20 @@
-# Environment Variables
+# Environment Variables (NEVER COMMIT)
 .env
-.env.local
-.env.production
-.env.development
-
-# Virtual Environment
-venv/
-env/
-.venv/
+.env.*
+!.env.example
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
+venv/
+env/
+.venv/
 *.egg-info/
-.installed.cfg
 *.egg
-PIPFILE.lock
+dist/
+build/
 
 # Database
 *.db
@@ -42,20 +26,16 @@ instance/
 *.log
 logs/
 
-# IDE
+# IDE / Editor
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
 
 # OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
 # SSL Certificates
@@ -65,81 +45,35 @@ Thumbs.db
 *.p12
 *.pfx
 
-# Secrets and Keys
+# Secrets
 secrets/
 keys/
 credentials/
 *.secret
 *.private
 
-# Docker
-.dockerignore
+# User uploads
+static/uploads/profiles/*
+static/uploads/logos/*
+!static/uploads/profiles/.gitkeep
+!static/uploads/logos/.gitkeep
 
-# Backup files
+# Backup/temp files
 *.bak
 *.backup
 *.tmp
+*.temp
 
 # Testing
 .coverage
 .pytest_cache/
-.tox/
-.nox/
-coverage.xml
-*.cover
-.hypothesis/
+htmlcov/
 
-# Node.js (if using npm for frontend tools)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Docker data (local)
+postgres_data/
+redis_data/
 
-# Local development
-local_settings.py
-development.ini
-
-# Deployment packages
+# Misc
+cookies*.txt
 *.zip
 *.tar.gz
-*.tar.bz2
-
-# Sensitive configuration
-config.ini
-config.yaml
-config.yml
-settings.ini
-
-# CloudFlare/CDN cache
-.cache/
-
-# Temporary files
-*.tmp
-*.temp
-
-# User-specific files
-*.sublime-project
-*.sublime-workspace
-
-# Flask session files
-flask_session/
-
-# Gunicorn
-gunicorn.pid
-
-# SQLite journal files
-*.db-journal
-*.sqlite-journal
-
-# Local nginx configs (keep production template)
-nginx_local.conf
-
-# SSH keys
-*.pem
-id_rsa
-id_rsa.pub
-known_hosts
-
-# Application specific
-quote_calculator_v2_deployment.zip
-deployment_package.zip
