@@ -198,6 +198,7 @@ class User(db.Model, UserMixin):
     can_manage_users = db.Column(db.Boolean, default=False)
     can_view_analytics = db.Column(db.Boolean, default=False)
     can_view_logs = db.Column(db.Boolean, default=False)
+    is_partner = db.Column(db.Boolean, default=False)
     quotes = db.relationship('Quote', backref='user', lazy=True)
 
     def is_account_locked(self):
@@ -286,6 +287,17 @@ class LocationCache(db.Model):
     region = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class AllowedDomain(db.Model):
+    """Store allowed email domains for registration (primary and partner)"""
+    id = db.Column(db.Integer, primary_key=True)
+    domain = db.Column(db.String(255), unique=True, nullable=False)
+    domain_type = db.Column(db.String(20), nullable=False, default='partner')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    added_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    adder = db.relationship('User', backref='added_domains', lazy=True)
 
 
 # =============================================================================
@@ -506,38 +518,66 @@ def sanitize_input(input_string):
     return bleach.clean(input_string.strip(), tags=[], attributes={}, strip=True)
 
 
+def _normalize_domain(domain):
+    """Ensure a domain string starts with @"""
+    if domain and not domain.startswith('@'):
+        return '@' + domain
+    return domain
+
+
+def _get_primary_domain():
+    """Get the primary company domain from env or settings"""
+    domain = os.getenv('ALLOWED_EMAIL_DOMAIN', '')
+    if not domain:
+        domain = SiteSettings.get('allowed_email_domain', '')
+    return domain
+
+
 def validate_email_domain(email):
-    """Validate email and optionally check domain restriction"""
+    """Validate email and check against primary domain + partner domains"""
     try:
         if not email:
             return False
         email = sanitize_input(email)
         validate_email(email)
 
-        # Check domain restriction from environment or settings
-        allowed_domain = os.getenv('ALLOWED_EMAIL_DOMAIN', '')
-        if not allowed_domain:
-            allowed_domain = SiteSettings.get('allowed_email_domain', '')
+        primary_domain = _get_primary_domain()
 
-        # If no domain restriction, allow any valid email
-        if not allowed_domain:
+        partner_domains = AllowedDomain.query.filter_by(domain_type='partner').all()
+
+        allowed_domains = []
+        if primary_domain:
+            allowed_domains.append(_normalize_domain(primary_domain).lower())
+        for d in partner_domains:
+            allowed_domains.append(_normalize_domain(d.domain).lower())
+
+        # If no domain restrictions at all, allow any valid email
+        if not allowed_domains:
             return True
 
-        # Ensure domain starts with @
-        if not allowed_domain.startswith('@'):
-            allowed_domain = '@' + allowed_domain
-
-        return email.lower().endswith(allowed_domain.lower())
+        email_lower = email.lower()
+        return any(email_lower.endswith(d) for d in allowed_domains)
     except EmailNotValidError:
         return False
 
 
+def is_partner_domain(email):
+    """Check if an email belongs to a partner domain (not the primary domain)"""
+    if not email:
+        return False
+    email_lower = email.lower()
+    partner_domains = AllowedDomain.query.filter_by(domain_type='partner').all()
+    for d in partner_domains:
+        domain = _normalize_domain(d.domain).lower()
+        if email_lower.endswith(domain):
+            return True
+    return False
+
+
 def get_email_domain_display():
-    """Get the email domain restriction for display purposes"""
-    allowed_domain = os.getenv('ALLOWED_EMAIL_DOMAIN', '')
-    if not allowed_domain:
-        allowed_domain = SiteSettings.get('allowed_email_domain', '')
-    return allowed_domain if allowed_domain else None
+    """Get the primary email domain restriction for display purposes"""
+    primary_domain = _get_primary_domain()
+    return primary_domain if primary_domain else None
 
 
 def validate_password_strength(password):
@@ -903,12 +943,16 @@ def register():
         # First user becomes admin
         is_first_user = User.query.count() == 0
 
+        # Check if user's email matches a partner domain
+        partner_flag = is_partner_domain(email) if not is_first_user else False
+
         new_user = User(
             username=username,
             email=email,
             password_hash=password_hash.decode('utf-8'),
             full_name=full_name,
-            is_admin=is_first_user
+            is_admin=is_first_user,
+            is_partner=partner_flag
         )
 
         db.session.add(new_user)
@@ -1111,7 +1155,8 @@ def dashboard():
     return render_template("dashboard.html",
                          user=current_user,
                          motivational_quote=session.get('motivational_quote'),
-                         quote_author=session.get('quote_author'))
+                         quote_author=session.get('quote_author'),
+                         is_partner=current_user.is_partner)
 
 
 @app.route('/calculate', methods=['POST'])
@@ -1187,6 +1232,10 @@ def calculate():
 @login_required
 @limiter.limit("30 per minute")
 def recent_quotes():
+    # Partners cannot access the recent quotes listing
+    if current_user.is_partner:
+        return jsonify([])
+
     quotes = Quote.query.join(User).order_by(Quote.created_at.desc()).limit(50).all()
 
     quotes_data = []
@@ -1363,7 +1412,7 @@ def toggle_user_permission(user_id, permission):
     if user.email == current_user.email and permission in ['can_manage_users', 'is_admin']:
         return jsonify({"error": "Cannot modify your own admin permissions"}), 400
 
-    valid_permissions = ['can_manage_users', 'can_view_analytics', 'can_view_logs']
+    valid_permissions = ['can_manage_users', 'can_view_analytics', 'can_view_logs', 'is_partner']
     if permission not in valid_permissions:
         return jsonify({"error": "Invalid permission"}), 400
 
@@ -1411,6 +1460,84 @@ def update_branding():
     log_user_action("BRANDING_UPDATED", f"Admin updated site branding settings")
 
     return jsonify({"success": True, "message": "Settings updated successfully"})
+
+
+@app.route('/admin/settings/partner-domains', methods=['GET'])
+@admin_required
+def get_partner_domains():
+    """Get all partner domains"""
+    domains = AllowedDomain.query.filter_by(domain_type='partner').order_by(AllowedDomain.created_at.desc()).all()
+    domains_data = []
+    for d in domains:
+        domains_data.append({
+            'id': d.id,
+            'domain': d.domain,
+            'domain_type': d.domain_type,
+            'created_at': d.created_at.strftime('%d/%m/%Y %H:%M') if d.created_at else None,
+            'added_by': d.adder.full_name if d.adder else 'System'
+        })
+    return jsonify({'success': True, 'domains': domains_data})
+
+
+@app.route('/admin/settings/partner-domains', methods=['POST'])
+@admin_required
+@csrf.exempt
+def add_partner_domain():
+    """Add a new partner domain"""
+    data = request.json
+    domain = sanitize_input(data.get('domain', ''))
+
+    if not domain:
+        return jsonify({'error': 'Domain is required'}), 400
+
+    if not domain.startswith('@'):
+        domain = '@' + domain
+
+    if len(domain) < 4 or '.' not in domain:
+        return jsonify({'error': 'Invalid domain format. Use @company.com'}), 400
+
+    if len(domain) > 255:
+        return jsonify({'error': 'Domain too long (max 255 characters)'}), 400
+
+    existing = AllowedDomain.query.filter(
+        db.func.lower(AllowedDomain.domain) == domain.lower()
+    ).first()
+    if existing:
+        return jsonify({'error': 'This domain already exists'}), 400
+
+    primary_domain = _get_primary_domain()
+    if primary_domain:
+        pd = _normalize_domain(primary_domain)
+        if domain.lower() == pd.lower():
+            return jsonify({'error': 'This domain is already the primary domain'}), 400
+
+    new_domain = AllowedDomain(
+        domain=domain,
+        domain_type='partner',
+        added_by=current_user.id
+    )
+    db.session.add(new_domain)
+    db.session.commit()
+
+    log_user_action('PARTNER_DOMAIN_ADDED', f'Added partner domain: {domain}')
+
+    return jsonify({'success': True, 'message': f'Partner domain {domain} added successfully'})
+
+
+@app.route('/admin/settings/partner-domains/<int:domain_id>', methods=['DELETE'])
+@admin_required
+@csrf.exempt
+def remove_partner_domain(domain_id):
+    """Remove a partner domain"""
+    domain = AllowedDomain.query.get_or_404(domain_id)
+    domain_name = domain.domain
+
+    db.session.delete(domain)
+    db.session.commit()
+
+    log_user_action('PARTNER_DOMAIN_REMOVED', f'Removed partner domain: {domain_name}')
+
+    return jsonify({'success': True, 'message': f'Partner domain {domain_name} removed'})
 
 
 @app.route('/admin/settings/logo', methods=['POST'])
@@ -1493,8 +1620,18 @@ def update_profile():
         if existing_user and existing_user.id != current_user.id:
             return jsonify({"error": "Email address already in use"}), 400
 
+        # Update partner status if email domain changed
+        old_was_partner = current_user.is_partner
+        new_is_partner = is_partner_domain(new_email)
+
         current_user.email = new_email
+        current_user.is_partner = new_is_partner
         db.session.commit()
+
+        if old_was_partner != new_is_partner:
+            log_user_action("PARTNER_STATUS_CHANGED",
+                          f"Partner status changed to {new_is_partner} after email update to {new_email}")
+
         log_user_action("EMAIL_UPDATED", f"Email changed to {new_email}")
         return jsonify({"success": True, "message": "Email updated successfully"})
 

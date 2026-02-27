@@ -385,7 +385,7 @@
                         <span>{{ current_user.full_name }}</span>
                     </a>
                 </div>
-                {% if current_user.is_admin or current_user.can_manage_users or current_user.can_view_analytics or current_user.can_view_logs %}
+                {% if not current_user.is_partner and (current_user.is_admin or current_user.can_manage_users or current_user.can_view_analytics or current_user.can_view_logs) %}
                 <a class="nav-btn nav-btn-warning" href="{{ url_for('admin_panel') }}">
                     <i class="fas fa-cog me-2"></i>Admin
                 </a>

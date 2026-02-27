@@ -95,12 +95,7 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirm_password').value;
 
-    // Check email domain if restriction is set
-    if (emailDomain && !email.toLowerCase().endsWith(emailDomain.toLowerCase())) {
-        e.preventDefault();
-        showToast('Email must be from ' + emailDomain + ' domain', 'danger');
-        return;
-    }
+    // Domain validation is handled server-side to support multiple domains
 
     if (password !== confirmPassword) {
         e.preventDefault();

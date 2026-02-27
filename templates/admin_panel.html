@@ -138,7 +138,10 @@
                                             {% if user.can_view_logs %}
                                                 <span class="badge bg-warning text-dark me-1"><i class="fas fa-clipboard-list me-1"></i>Logs</span>
                                             {% endif %}
-                                            {% if not user.is_admin and not user.can_manage_users and not user.can_view_analytics and not user.can_view_logs %}
+                                            {% if user.is_partner %}
+                                                <span class="badge me-1" style="background-color: #6f42c1;"><i class="fas fa-handshake me-1"></i>Partner</span>
+                                            {% endif %}
+                                            {% if not user.is_admin and not user.can_manage_users and not user.can_view_analytics and not user.can_view_logs and not user.is_partner %}
                                                 <span class="badge bg-secondary">Standard User</span>
                                             {% endif %}
                                         </div>
@@ -146,7 +149,7 @@
                                     <td>
                                         <div class="btn-group" role="group">
                                             {% if current_user.is_admin %}
-                                                <button class="btn btn-sm btn-outline-info permissions-btn" 
+                                                <button class="btn btn-sm btn-outline-info permissions-btn"
                                                         data-user-id="{{ user.id }}"
                                                         data-user-name="{{ user.full_name }}"
                                                         data-user-email="{{ user.email }}"
@@ -154,6 +157,7 @@
                                                         data-can-manage-users="{{ user.can_manage_users|lower }}"
                                                         data-can-view-analytics="{{ user.can_view_analytics|lower }}"
                                                         data-can-view-logs="{{ user.can_view_logs|lower }}"
+                                                        data-is-partner="{{ user.is_partner|lower }}"
                                                         title="Manage Permissions">
                                                     <i class="fas fa-cog"></i>
                                                 </button>
@@ -581,6 +585,28 @@
                             </div>
                         </div>
 
+                        <!-- Partner Status -->
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-8">
+                                        <h6 class="mb-1" style="color: #6f42c1;">
+                                            <i class="fas fa-handshake me-2"></i>Partner
+                                        </h6>
+                                        <small class="text-muted">Partner users can only access the quote calculator. They cannot see historic quotes or admin features.</small>
+                                    </div>
+                                    <div class="col-4 text-end">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="partnerToggle" onchange="toggleUserPermission('is_partner', this.checked)">
+                                            <label class="form-check-label" for="partnerToggle">
+                                                <span class="partner-status">Disabled</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -626,10 +652,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const canManageUsers = this.dataset.canManageUsers === 'true';
             const canViewAnalytics = this.dataset.canViewAnalytics === 'true';
             const canViewLogs = this.dataset.canViewLogs === 'true';
-            
-            console.log('Button data:', {userId, userName, userEmail, isAdmin, canManageUsers, canViewAnalytics, canViewLogs});
-            
-            showPermissionsModal(userId, userName, userEmail, isAdmin, canManageUsers, canViewAnalytics, canViewLogs);
+            const isPartner = this.dataset.isPartner === 'true';
+
+            console.log('Button data:', {userId, userName, userEmail, isAdmin, canManageUsers, canViewAnalytics, canViewLogs, isPartner});
+
+            showPermissionsModal(userId, userName, userEmail, isAdmin, canManageUsers, canViewAnalytics, canViewLogs, isPartner);
         });
     });
 });
@@ -689,8 +716,8 @@ async function toggleAdminStatus(userId) {
 let currentUserId = null;
 let currentUserEmail = null;
 
-function showPermissionsModal(userId, userName, userEmail, isAdmin, canManageUsers, canViewAnalytics, canViewLogs) {
-    console.log('showPermissionsModal called with:', {userId, userName, userEmail, isAdmin, canManageUsers, canViewAnalytics, canViewLogs});
+function showPermissionsModal(userId, userName, userEmail, isAdmin, canManageUsers, canViewAnalytics, canViewLogs, isPartner) {
+    console.log('showPermissionsModal called with:', {userId, userName, userEmail, isAdmin, canManageUsers, canViewAnalytics, canViewLogs, isPartner});
     
     currentUserId = userId;
     currentUserEmail = userEmail;
@@ -705,12 +732,14 @@ function showPermissionsModal(userId, userName, userEmail, isAdmin, canManageUse
         document.getElementById('userMgmtToggle').checked = canManageUsers;
         document.getElementById('analyticsToggle').checked = canViewAnalytics;
         document.getElementById('logsToggle').checked = canViewLogs;
-        
+        document.getElementById('partnerToggle').checked = isPartner;
+
         // Update status labels
         document.querySelector('.admin-status').textContent = isAdmin ? 'Enabled' : 'Disabled';
         document.querySelector('.user-mgmt-status').textContent = canManageUsers ? 'Enabled' : 'Disabled';
         document.querySelector('.analytics-status').textContent = canViewAnalytics ? 'Enabled' : 'Disabled';
         document.querySelector('.logs-status').textContent = canViewLogs ? 'Enabled' : 'Disabled';
+        document.querySelector('.partner-status').textContent = isPartner ? 'Enabled' : 'Disabled';
         
         // Disable admin toggle for current user
         const adminToggle = document.getElementById('adminToggle');
@@ -763,7 +792,8 @@ async function toggleUserPermission(permission, enabled) {
                 'is_admin': '.admin-status',
                 'can_manage_users': '.user-mgmt-status',
                 'can_view_analytics': '.analytics-status',
-                'can_view_logs': '.logs-status'
+                'can_view_logs': '.logs-status',
+                'is_partner': '.partner-status'
             };
             
             const statusElement = document.querySelector(statusMap[permission]);

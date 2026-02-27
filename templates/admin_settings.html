@@ -138,6 +138,55 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Partner Domain Management -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0"><i class="fas fa-handshake me-2"></i>Partner Domains</h5>
+                                    <button type="button" class="btn btn-sm btn-light" onclick="loadPartnerDomains()">
+                                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">
+                                    Partner domains allow external users to register and use the quote calculator.
+                                    Users from partner domains are assigned a restricted view (no historic quotes table, no admin access).
+                                </p>
+
+                                <!-- Add New Partner Domain -->
+                                <div class="row align-items-end mb-4">
+                                    <div class="col-md-8">
+                                        <label for="partnerDomain" class="form-label fw-bold">
+                                            Add Partner Domain
+                                        </label>
+                                        <input type="text" class="form-control" id="partnerDomain"
+                                               placeholder="@partnercompany.com">
+                                        <div class="form-text">
+                                            Enter a domain (e.g., @partnercompany.com). Users registering with this domain will have partner access.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-success w-100" onclick="addPartnerDomain()">
+                                            <i class="fas fa-plus me-2"></i>Add Domain
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Current Partner Domains List -->
+                                <div id="partnerDomainsList">
+                                    <div class="text-center text-muted py-3">
+                                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                                        Loading partner domains...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -261,6 +310,93 @@
         })
         .catch(error => {
             showToast('Error saving settings', 'danger');
+        });
+    }
+
+    // Partner Domain Management
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPartnerDomains();
+    });
+
+    function loadPartnerDomains() {
+        fetch('/admin/settings/partner-domains')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('partnerDomainsList');
+            if (data.success && data.domains.length > 0) {
+                let html = '<div class="table-responsive"><table class="table table-hover table-sm">';
+                html += '<thead><tr><th>Domain</th><th>Added By</th><th>Date Added</th><th>Actions</th></tr></thead>';
+                html += '<tbody>';
+                data.domains.forEach(domain => {
+                    html += `<tr>
+                        <td><strong>${domain.domain}</strong></td>
+                        <td>${domain.added_by}</td>
+                        <td>${domain.created_at || 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removePartnerDomain(${domain.id}, '${domain.domain}')">
+                                <i class="fas fa-trash me-1"></i>Remove
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-inbox fa-2x mb-2 d-block"></i>No partner domains configured.</div>';
+            }
+        })
+        .catch(error => {
+            showToast('Error loading partner domains', 'danger');
+        });
+    }
+
+    function addPartnerDomain() {
+        const domain = document.getElementById('partnerDomain').value.trim();
+        if (!domain) {
+            showToast('Please enter a domain', 'danger');
+            return;
+        }
+
+        fetch('/admin/settings/partner-domains', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ domain: domain })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                document.getElementById('partnerDomain').value = '';
+                loadPartnerDomains();
+            } else {
+                showToast(data.error || 'Failed to add domain', 'danger');
+            }
+        })
+        .catch(error => {
+            showToast('Error adding partner domain', 'danger');
+        });
+    }
+
+    function removePartnerDomain(domainId, domainName) {
+        if (!confirm(`Are you sure you want to remove the partner domain ${domainName}? Existing partner users will retain their partner status.`)) {
+            return;
+        }
+
+        fetch(`/admin/settings/partner-domains/${domainId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                loadPartnerDomains();
+            } else {
+                showToast(data.error || 'Failed to remove domain', 'danger');
+            }
+        })
+        .catch(error => {
+            showToast('Error removing partner domain', 'danger');
         });
     }
 
